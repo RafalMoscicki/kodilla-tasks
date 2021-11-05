@@ -30,12 +30,28 @@ public class SimpleEmailService {
         }
     }
 
+    public void sendScheduler(final Mail mail) {
+        try {
+            javaMailSender.send(createScheduledMimeMessage(mail));
+        } catch (MailException e) {
+            log.error("Failed to process email sending: " + e.getMessage(), e);
+        }
+    }
+
     private MimeMessagePreparator createMimeMessage(final Mail mail) {
+        return createMimeMessage(mail, mailCreatorService.buildTrelloCardEmail(mail.getMessage()));
+    }
+
+    private MimeMessagePreparator createScheduledMimeMessage(final Mail mail) {
+        return createMimeMessage(mail, mailCreatorService.sendOneMsgPerDay(mail.getMessage()));
+    }
+
+    private MimeMessagePreparator createMimeMessage(final Mail mail, String text) {
         return mimeMessage -> {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
             messageHelper.setTo(mail.getMailTo());
             messageHelper.setSubject(mail.getSubject());
-            messageHelper.setText(mailCreatorService.buildTrelloCardEmail(mail.getMessage()), true);
+            messageHelper.setText(text, true);
         };
     }
 }
